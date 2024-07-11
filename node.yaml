@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-mysql-api
+spec:
+  selector:
+    matchLabels:
+      app: node-mysql-api
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: node-mysql-api
+    spec:
+      containers:
+      - name: node-mysql-api
+        image: dakshata20/node-mysql-api:latest
+        ports:
+        - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: node-mysql-api
+spec:
+  type: NodePort
+  ports:
+  - port: 3000
+    nodePort: 30001
+  selector:
+    app: node-mysql-api
