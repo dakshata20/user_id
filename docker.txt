@@ -2,7 +2,3 @@ docker run --name node-mysql-api-container --network mynetwork -p 3000:3000 -d n
 
 docker run --name mysql-container --network mynetwork -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=userdb -e MYSQL_USER=user -e MYSQL_PASSWORD=password -p 3307:3306 -d mysql:latest
 
-docker build -t node-app .
-
-docker exec -it mysql-container mysql -uuser -pletmein
-

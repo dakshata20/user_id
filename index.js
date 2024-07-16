@@ -1,66 +1,66 @@
+require('dotenv').config();
+const mysql = require('mysql2');
+
+const pool = mysql.createPool({
+  host: process.env.MYSQL_HOST,  
+  user: process.env.MYSQL_USER,
+  password: process.env.MYSQL_PASSWORD,
+  database: process.env.MYSQL_DATABASE,
+  port: process.env.MYSQL_PORT,
+  waitForConnections: true,
+  connectionLimit: 10,    
+  queueLimit: 0           
+});
+
 const express = require('express');
 const bodyParser = require('body-parser');
-const mysql = require('mysql2');
 
 const app = express();
 const port = 3000;
 
-
 app.use(bodyParser.json());
 
-
-const db = mysql.createConnection({
-  host: 'mysql-container', 
-  user: 'user', 
-  password: 'letmein',
-  database: 'userdb' 
+pool.query(`CREATE TABLE IF NOT EXISTS users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL UNIQUE
+)`, (err) => {
+  if (err) throw err;
+  console.log('User table created or already exists');
 });
-
-db.connect((err) => {
-  if (err) {
-    console.error('Error connecting to the database:', err);
-    return;
-  }
-  console.log('Connected to the MySQL database.');
-});
-
 
 app.post('/registerUser', (req, res) => {
-  const { first_name, last_name, email, phone } = req.body;
+  const { name, email } = req.body;
+  if (!name || !email) {
+    return res.status(400).send('Name and email are required');
+  }
 
-  const sql = 'INSERT INTO users (first_name, last_name, email, phone) VALUES (?, ?, ?, ?)';
-  db.query(sql, [first_name, last_name, email, phone], (err, result) => {
+  const query = 'INSERT INTO users (name, email) VALUES (?, ?)';
+  pool.query(query, [name, email], (err, result) => {
     if (err) {
       console.error('Error inserting user:', err);
-      res.status(500).send('Error registering user');
-      return;
+      return res.status(500).send('Error registering user');
     }
-    res.status(201).send({ id: result.insertId, message: 'User registered successfully' });
+    res.status(201).send({ id: result.insertId, name, email });
   });
 });
 
-
 app.get('/getUserById/:id', (req, res) => {
-  const userId = req.params.id;
+  const { id } = req.params;
 
-  const sql = 'SELECT * FROM users WHERE id = ?';
-  db.query(sql, [userId], (err, results) => {
+  const query = 'SELECT * FROM users WHERE id = ?';
+  pool.query(query, [id], (err, results) => {
     if (err) {
       console.error('Error fetching user:', err);
-      res.status(500).send('Error fetching user details');
-      return;
+      return res.status(500).send('Error fetching user');
     }
-
     if (results.length === 0) {
-      res.status(404).send('User not found');
-      return;
+      return res.status(404).send('User not found');
     }
-
     res.send(results[0]);
   });
 });
 
-
 app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+  console.log(`Server running on port ${port}`);
 });
