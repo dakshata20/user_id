@@ -17,15 +17,36 @@ spec:
         image: dakshata20/node-mysql-api:latest
         ports:
         - containerPort: 3000
-        envFrom:
-        - configMapRef:
-            name: mysql-config
-        - secretRef:
-            name: mysql-secret
         volumeMounts:
         - mountPath: /etc/config
           name: config-volume
           readOnly: true
+        env:
+        - name: MYSQL_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: mysql-config
+              key: MYSQL_HOST
+        - name: MYSQL_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: mysql-config
+              key: MYSQL_PORT
+        - name: MYSQL_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: mysql-config
+              key: MYSQL_DATABASE
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: MYSQL_USER
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: MYSQL_PASSWORD
       volumes:
       - name: config-volume
         projected:
